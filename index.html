@@ -696,7 +696,8 @@ function setCoin(c) {
 // ─── Formatting ───
 function fmt(n, d = 2) { return Number(n).toLocaleString('en', { minimumFractionDigits: d, maximumFractionDigits: d }); }
 function fmtU(n) { return fmt(n) + ' U'; }
-function fmtPts(n) { return n >= 100 ? fmt(n, 0) : n >= 1 ? fmt(n, 1) : n >= 0.1 ? fmt(n, 2) : fmt(n, 3); }
+function fmtPts(n) { return n >= 100 ? fmt(n, 0) : n >= 1 ? fmt(n, 1) : n >= 0.1 ? fmt(n, 2) : n >= 0.001 ? fmt(n, 3) : fmt(n, 6); }
+function fmtPrice(n) { return n >= 1000 ? fmt(n, 2) : n >= 10 ? fmt(n, 2) : n >= 1 ? fmt(n, 4) : n >= 0.01 ? fmt(n, 5) : fmt(n, 6); }
 
 // ─── Coin-specific parameter presets (scaled proportionally to ETH defaults) ───
 const COIN_PRESETS = {
@@ -776,9 +777,9 @@ function calc() {
   document.getElementById('r-total').textContent     = fmt(res.totalPos) + ' ' + currentCoin;
   document.getElementById('r-dist').textContent      = fmtPts(res.dist) + ' 點';
   document.getElementById('r-ratio').textContent     = '1 : ' + fmt(res.R, 2);
-  document.getElementById('r-cost').textContent      = fmt(res.avgCost);
-  document.getElementById('r-exit').textContent      = fmt(res.exitPrice);
-  document.getElementById('r-death').textContent     = fmt(res.deathLine);
+  document.getElementById('r-cost').textContent      = fmtPrice(res.avgCost);
+  document.getElementById('r-exit').textContent      = fmtPrice(res.exitPrice);
+  document.getElementById('r-death').textContent     = fmtPrice(res.deathLine);
   document.getElementById('r-profitpts').textContent = fmtPts(res.profitPts) + ' 點';
   document.getElementById('r-gross').textContent     = fmtU(res.grossProfit);
   document.getElementById('r-maxloss-show').textContent = fmtU(params.maxloss);
@@ -845,7 +846,7 @@ function updateRangeTable(p1, params, currentP2) {
   const step = p1 >= 10000 ? 100 : p1 >= 1000 ? 20 : p1 >= 100 ? 5 : p1 >= 10 ? 1 : p1 >= 1 ? 0.1 : 0.01;
   const rows = Array.from({length: 16}, (_, i) => isShort ? p1 + step * (i + 1) : p1 - step * (i + 1))
     .filter(p2 => p2 > 0);
-  meta.textContent = `首倉 ${fmt(p1)} | 步距 ${fmtPts(step)} 點`;
+  meta.textContent = `首倉 ${fmtPrice(p1)} | 步距 ${fmtPts(step)} 點`;
 
   if (rows.length === 0) {
     wrap.innerHTML = '<div class="empty-msg">此方向下無有效補倉價格範圍</div>';
@@ -854,7 +855,7 @@ function updateRangeTable(p1, params, currentP2) {
 
   const tbody = rows.map(p2 => {
     const res = computeRow(p1, p2, params);
-    if (res.error) return `<tr class="row-bad"><td><strong>${fmt(p2)}</strong></td><td colspan="6" style="color:var(--muted)">${res.error}</td></tr>`;
+    if (res.error) return `<tr class="row-bad"><td><strong>${fmtPrice(p2)}</strong></td><td colspan="6" style="color:var(--muted)">${res.error}</td></tr>`;
 
     const isCurrent = currentP2 && Math.abs(p2 - currentP2) < step * 0.6;
     const rowClass   = isCurrent ? 'row-current' : res.status === 'ok' ? 'row-ok' : res.status === 'warn' ? 'row-warn' : 'row-bad';
@@ -865,18 +866,18 @@ function updateRangeTable(p1, params, currentP2) {
     // Mobile: fewer columns
     if (isMobile) {
       return `<tr class="${rowClass}">
-        <td><strong>${fmt(p2)}</strong>${isCurrent ? ' ◀' : ''}</td>
-        <td class="yellow">${fmt(res.avgCost)}</td>
+        <td><strong>${fmtPrice(p2)}</strong>${isCurrent ? ' ◀' : ''}</td>
+        <td class="yellow">${fmtPrice(res.avgCost)}</td>
         <td class="${survColor}">${fmtPts(res.surviveSpace)} 點</td>
         <td><span class="badge ${badgeClass}">${badgeText}</span></td>
       </tr>`;
     }
 
     return `<tr class="${rowClass}">
-      <td><strong>${fmt(p2)}</strong>${isCurrent ? ' ◀ 你的補倉' : ''}</td>
+      <td><strong>${fmtPrice(p2)}</strong>${isCurrent ? ' ◀ 你的補倉' : ''}</td>
       <td>${fmtPts(res.dist)} 點</td>
-      <td class="yellow">${fmt(res.avgCost)}</td>
-      <td class="green">${fmt(res.exitPrice)}</td>
+      <td class="yellow">${fmtPrice(res.avgCost)}</td>
+      <td class="green">${fmtPrice(res.exitPrice)}</td>
       <td class="${survColor}">${fmtPts(res.surviveSpace)} 點</td>
       <td class="green">${fmtU(res.grossProfit)}</td>
       <td><span class="badge ${badgeClass}">${badgeText}</span></td>
