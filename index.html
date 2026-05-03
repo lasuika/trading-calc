@@ -47,23 +47,43 @@ body {
 .app-title { font-size: 15px; font-weight: 700; white-space: nowrap; }
 .app-title span { color: var(--yellow); }
 
-/* Coin pills — desktop inline, mobile in own row */
-.coin-pills { display: flex; gap: 4px; }
-.coin-pill {
-  padding: 5px 11px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
+/* ─── COIN SEARCH ─── */
+.coin-search-wrap { position: relative; flex-shrink: 0; }
+.coin-search-desktop { display: flex; align-items: center; }
+.coin-search-input {
+  background: var(--surface);
   border: 1px solid var(--border2);
-  background: transparent;
-  color: var(--muted2);
-  transition: all 0.15s;
-  white-space: nowrap;
+  border-radius: 8px;
+  padding: 5px 10px 5px 26px;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  outline: none;
+  width: 120px;
   min-height: 32px;
+  transition: width 0.2s, border-color 0.15s;
+  cursor: pointer;
 }
-.coin-pill:hover { border-color: var(--yellow); color: var(--text); }
-.coin-pill.active { background: var(--yellow); color: #000; border-color: var(--yellow); }
+.coin-search-input:focus { border-color: var(--yellow); background: var(--card); width: 170px; cursor: text; }
+.coin-search-icon {
+  position: absolute; left: 8px; top: 50%; transform: translateY(-50%);
+  font-size: 12px; pointer-events: none; color: var(--muted); line-height: 1;
+}
+.coin-dropdown {
+  display: none; position: absolute; top: calc(100% + 6px); left: 0;
+  min-width: 190px; background: var(--card); border: 1px solid var(--border2);
+  border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); z-index: 300;
+  overflow: hidden; max-height: 300px; overflow-y: auto;
+}
+.coin-dropdown.open { display: block; }
+.coin-dd-item {
+  padding: 9px 14px; font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: background 0.1s; user-select: none;
+}
+.coin-dd-item:hover { background: var(--surface); }
+.coin-dd-label { padding: 6px 14px 2px; font-size: 10px; color: var(--muted); letter-spacing: 0.5px; text-transform: uppercase; }
+.coin-dd-divider { border-top: 1px solid var(--border); margin: 4px 0; }
+.coin-dd-empty { padding: 12px 14px; font-size: 12px; color: var(--muted); }
 
 /* Direction toggle */
 .dir-toggle { display: flex; border: 1px solid var(--border2); border-radius: 8px; overflow: hidden; flex-shrink: 0; }
@@ -105,15 +125,11 @@ body {
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   padding: 8px 16px;
-  gap: 6px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
   position: sticky;
   top: 52px;
   z-index: 99;
+  overflow: visible;
 }
-.mobile-coin-row::-webkit-scrollbar { display: none; }
 
 /* ─── LIVE BAR ─── */
 .live-bar {
@@ -332,7 +348,7 @@ tr.row-current td { font-weight: 600; }
 }
 
 /* ═══ MOBILE OVERRIDES ═══ */
-body.is-mobile .coin-pills { display: none; }
+body.is-mobile .coin-search-desktop { display: none; }
 body.is-mobile .mobile-coin-row { display: flex; }
 body.is-mobile .verdict-quote { display: none; }
 body.is-mobile .results-row { grid-template-columns: 1fr; }
@@ -362,13 +378,14 @@ body.is-desktop .sheet-overlay { display: none !important; }
 <div class="topbar">
   <div class="topbar-left">
     <div class="app-title">逆勢補倉<span>計算器</span></div>
-    <!-- Desktop: coin pills inline -->
-    <div class="coin-pills" id="coin-pills-desktop">
-      <button class="coin-pill active" onclick="setCoin('ETH')">ETH</button>
-      <button class="coin-pill" onclick="setCoin('BTC')">BTC</button>
-      <button class="coin-pill" onclick="setCoin('SOL')">SOL</button>
-      <button class="coin-pill" onclick="setCoin('XRP')">XRP</button>
-      <button class="coin-pill" onclick="setCoin('BNB')">BNB</button>
+    <!-- Desktop: coin search -->
+    <div class="coin-search-wrap coin-search-desktop">
+      <span class="coin-search-icon">🔍</span>
+      <input type="text" class="coin-search-input" id="coin-search-desktop" value="ETH"
+        autocomplete="off" spellcheck="false"
+        onfocus="openCoinSearch('desktop')" onblur="closeCoinSearch('desktop')"
+        oninput="filterCoinSearch(this.value,'desktop')">
+      <div class="coin-dropdown" id="coin-dropdown-desktop"></div>
     </div>
     <div class="dir-toggle">
       <button class="dir-btn active-short" id="btn-short" onclick="setDir('short')">▼ 空單</button>
@@ -380,11 +397,14 @@ body.is-desktop .sheet-overlay { display: none !important; }
 
 <!-- ── Mobile: coin row ── -->
 <div class="mobile-coin-row" id="mobile-coin-row">
-  <button class="coin-pill active" onclick="setCoin('ETH')">ETH</button>
-  <button class="coin-pill" onclick="setCoin('BTC')">BTC</button>
-  <button class="coin-pill" onclick="setCoin('SOL')">SOL</button>
-  <button class="coin-pill" onclick="setCoin('XRP')">XRP</button>
-  <button class="coin-pill" onclick="setCoin('BNB')">BNB</button>
+  <div class="coin-search-wrap" style="flex:1;min-width:0">
+    <span class="coin-search-icon">🔍</span>
+    <input type="text" class="coin-search-input" id="coin-search-mobile" value="ETH"
+      style="width:100%" autocomplete="off" spellcheck="false"
+      onfocus="openCoinSearch('mobile')" onblur="closeCoinSearch('mobile')"
+      oninput="filterCoinSearch(this.value,'mobile')">
+    <div class="coin-dropdown" id="coin-dropdown-mobile"></div>
+  </div>
 </div>
 
 <!-- ── Live price bar ── -->
@@ -518,6 +538,107 @@ let direction = 'short';
 let currentCoin = 'ETH';
 let livePrice = null;
 let liveInterval = null;
+let allSwapCoins = [];
+let pendingAutoParams = false;
+
+// ─── Load all OKX USDT perpetual contracts ───
+const PRESET_COIN_LIST = ['ETH', 'BTC', 'SOL', 'XRP', 'BNB'];
+async function loadInstruments() {
+  try {
+    const res = await fetch('https://www.okx.com/api/v5/public/instruments?instType=SWAP');
+    const json = await res.json();
+    if (json.code === '0') {
+      allSwapCoins = json.data
+        .filter(i => i.instId.endsWith('-USDT-SWAP'))
+        .map(i => i.instId.replace('-USDT-SWAP', ''))
+        .sort();
+    }
+  } catch {}
+  if (!allSwapCoins.length) allSwapCoins = PRESET_COIN_LIST;
+}
+
+// ─── Coin search helpers ───
+function niceNum(x) {
+  if (x <= 0) return 1;
+  const p = Math.pow(10, Math.floor(Math.log10(x)));
+  const n = x / p;
+  return (n < 1.5 ? 1 : n < 3.5 ? 2 : n < 7 ? 5 : 10) * p;
+}
+function autoParams(price) {
+  const ep = niceNum(price * 0.025);
+  return { exitpts: ep, minsurvive: niceNum(ep * 0.6), minprofit: niceNum(ep * 0.4) };
+}
+
+function filterCoins(q) {
+  if (!q) {
+    const extras = allSwapCoins.filter(c => !PRESET_COIN_LIST.includes(c));
+    return [...PRESET_COIN_LIST, ...extras.slice(0, 3)];
+  }
+  const prefix   = allSwapCoins.filter(c => c.startsWith(q));
+  const contains = allSwapCoins.filter(c => !c.startsWith(q) && c.includes(q));
+  return [...prefix, ...contains].slice(0, 10);
+}
+
+function renderCoinDropdown(dd, coins, q) {
+  if (!coins.length) {
+    dd.innerHTML = '<div class="coin-dd-empty">找不到 USDT 永續合約</div>';
+    return;
+  }
+  const hasPreset = !q && PRESET_COIN_LIST.some(c => coins.includes(c));
+  let html = '';
+  if (hasPreset && !q) {
+    html += '<div class="coin-dd-label">常用</div>';
+    html += PRESET_COIN_LIST.map(c => `<div class="coin-dd-item" onmousedown="selectCoin('${c}')">${c}</div>`).join('');
+    const rest = coins.filter(c => !PRESET_COIN_LIST.includes(c));
+    if (rest.length) {
+      html += '<div class="coin-dd-divider"></div><div class="coin-dd-label">其他</div>';
+      html += rest.map(c => `<div class="coin-dd-item" onmousedown="selectCoin('${c}')">${c}</div>`).join('');
+    }
+  } else {
+    html += coins.map(c => {
+      let label = c;
+      if (q) {
+        const i = c.indexOf(q);
+        if (i >= 0) label = c.slice(0, i) + `<strong style="color:var(--yellow)">${c.slice(i, i+q.length)}</strong>` + c.slice(i+q.length);
+      }
+      return `<div class="coin-dd-item" onmousedown="selectCoin('${c}')">${label}</div>`;
+    }).join('');
+  }
+  dd.innerHTML = html;
+}
+
+function openCoinSearch(which) {
+  const input = document.getElementById('coin-search-' + which);
+  const dd    = document.getElementById('coin-dropdown-' + which);
+  input.value = '';
+  input.placeholder = currentCoin + '…';
+  renderCoinDropdown(dd, filterCoins(''), '');
+  dd.classList.add('open');
+}
+
+function closeCoinSearch(which) {
+  const input = document.getElementById('coin-search-' + which);
+  const dd    = document.getElementById('coin-dropdown-' + which);
+  if (input) { input.value = currentCoin; input.placeholder = ''; }
+  if (dd) dd.classList.remove('open');
+}
+
+function filterCoinSearch(val, which) {
+  const q  = val.trim().toUpperCase();
+  const dd = document.getElementById('coin-dropdown-' + which);
+  renderCoinDropdown(dd, filterCoins(q), q);
+  dd.classList.add('open');
+}
+
+function selectCoin(c) {
+  ['desktop', 'mobile'].forEach(w => {
+    const inp = document.getElementById('coin-search-' + w);
+    const dd  = document.getElementById('coin-dropdown-' + w);
+    if (inp) { inp.value = c; inp.placeholder = ''; }
+    if (dd)  dd.classList.remove('open');
+  });
+  setCoin(c);
+}
 
 // ─── Settings sync between desktop panel and mobile sheet ───
 function syncSettings(field, val) {
@@ -553,13 +674,19 @@ function setDir(d) {
 
 function setCoin(c) {
   currentCoin = c;
-  document.querySelectorAll('.coin-pill').forEach(b => b.classList.toggle('active', b.textContent === c));
+  ['desktop', 'mobile'].forEach(w => {
+    const el = document.getElementById('coin-search-' + w);
+    if (el) el.value = c;
+  });
   const preset = COIN_PRESETS[c];
   if (preset) {
     Object.entries(preset).forEach(([k, v]) => {
       document.getElementById(k).value = v;
       document.getElementById('m-' + k).value = v;
     });
+    pendingAutoParams = false;
+  } else {
+    pendingAutoParams = true;
   }
   fetchLivePrice();
   calc();
@@ -780,6 +907,15 @@ async function fetchLivePrice() {
         `OKX ${currentCoin}/USDT · ${now}` +
         (chg !== null ? ` · <span style="color:${chg >= 0 ? 'var(--green)' : 'var(--red)'}">${chg >= 0 ? '+' : ''}${chg.toFixed(2)}%</span>` : '');
       updateFillBtns();
+      if (pendingAutoParams && coin === currentCoin) {
+        pendingAutoParams = false;
+        const ap = autoParams(livePrice);
+        ['exitpts', 'minsurvive', 'minprofit'].forEach(k => {
+          document.getElementById(k).value = ap[k];
+          document.getElementById('m-' + k).value = ap[k];
+        });
+        calc();
+      }
     } else {
       livePrice = null;
       document.getElementById('live-price').textContent = '—';
@@ -834,6 +970,7 @@ document.addEventListener('visibilitychange', () => {
 updateFillBtns();
 setDir('short');
 startLiveFeed();
+loadInstruments();
 </script>
 </body>
 </html>
