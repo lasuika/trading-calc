@@ -628,6 +628,10 @@ function calc() {
   if (res.error) {
     setVerdict('danger', '⚠️', '方向錯誤', res.error, '');
     resetValues();
+    const rp = params.maxloss / params.capital * 100;
+    document.getElementById('r-risk-pct').textContent     = rp.toFixed(1) + '%';
+    document.getElementById('r-maxloss-show').textContent = fmtU(params.maxloss);
+    document.getElementById('r-drawdown').textContent     = (rp * 3).toFixed(1) + '%';
     return;
   }
 
@@ -715,6 +719,11 @@ function updateRangeTable(p1, params, currentP2) {
     .filter(p2 => p2 > 0);
   meta.textContent = `首倉 ${fmt(p1)} | 步距 ${fmtPts(step)} 點`;
 
+  if (rows.length === 0) {
+    wrap.innerHTML = '<div class="empty-msg">此方向下無有效補倉價格範圍</div>';
+    return;
+  }
+
   const tbody = rows.map(p2 => {
     const res = computeRow(p1, p2, params);
     if (res.error) return `<tr class="row-bad"><td><strong>${fmt(p2)}</strong></td><td colspan="6" style="color:var(--muted)">${res.error}</td></tr>`;
@@ -755,9 +764,11 @@ function updateRangeTable(p1, params, currentP2) {
 
 // ─── OKX Live Price ───
 async function fetchLivePrice() {
+  const coin = currentCoin;
   try {
-    const res  = await fetch(`https://www.okx.com/api/v5/market/ticker?instId=${currentCoin}-USDT-SWAP`);
+    const res  = await fetch(`https://www.okx.com/api/v5/market/ticker?instId=${coin}-USDT-SWAP`);
     const json = await res.json();
+    if (coin !== currentCoin) return;
     if (json.code === '0' && json.data?.length) {
       livePrice = parseFloat(json.data[0].last);
       const open = parseFloat(json.data[0].open24h);
@@ -777,6 +788,7 @@ async function fetchLivePrice() {
       updateFillBtns();
     }
   } catch {
+    if (coin !== currentCoin) return;
     livePrice = null;
     document.getElementById('live-price').textContent = '—';
     document.getElementById('live-status').textContent = '網路錯誤，重試中…';
@@ -819,6 +831,7 @@ document.addEventListener('visibilitychange', () => {
   }, { passive: true });
 })();
 
+updateFillBtns();
 setDir('short');
 startLiveFeed();
 </script>
