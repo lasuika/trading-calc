@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>逆勢補倉計算器</title>
 <style>
 :root {
@@ -151,6 +151,7 @@ body {
 .fill-btn-1 { background: rgba(240,185,11,0.12); border: 1px solid rgba(240,185,11,0.3); color: var(--yellow); }
 .fill-btn-2 { background: rgba(79,142,247,0.12); border: 1px solid rgba(79,142,247,0.3); color: var(--blue); }
 .fill-btn:active { opacity: 0.6; }
+.fill-btn.no-price { opacity: 0.35; cursor: not-allowed; }
 
 /* ─── MAIN ─── */
 main { max-width: 1080px; margin: 0 auto; padding: 16px; }
@@ -453,7 +454,7 @@ body.is-desktop .sheet-overlay { display: none !important; }
       <div class="result-row"><span class="result-row-label">補倉數量</span><span class="result-row-value blue" id="r-q2">—</span></div>
       <div class="result-row"><span class="result-row-label">補倉後總倉位</span><span class="result-row-value" id="r-total">—</span></div>
       <div class="result-row"><span class="result-row-label">補倉距離</span><span class="result-row-value" id="r-dist">—</span></div>
-      <div class="result-row"><span class="result-row-label">補 / 首比例</span><span class="result-row-value" id="r-ratio">—</span></div>
+      <div class="result-row"><span class="result-row-label">首 : 補 比</span><span class="result-row-value" id="r-ratio">—</span></div>
     </div>
     <div class="result-group">
       <div class="group-header">🎯 關鍵價位</div>
@@ -678,6 +679,7 @@ function setVerdict(type, icon, status, desc, quote) {
 function resetValues() {
   ['r-q1','r-q2','r-total','r-dist','r-ratio','r-cost','r-exit','r-death','r-profitpts','r-gross','r-survive','r-maxloss-show','r-risk-pct','r-drawdown']
     .forEach(id => { document.getElementById(id).textContent = '—'; });
+  document.getElementById('r-survive').className = 'result-row-value';
   document.getElementById('survive-bar').style.width = '0%';
 }
 
@@ -690,8 +692,8 @@ function resetResults(params) {
       <div class="verdict-desc">系統會自動計算倉位大小、成本價、死亡線與預期獲利</div>
     </div>`;
   resetValues();
-  const riskPct = (params.maxloss / params.capital * 100).toFixed(1);
-  document.getElementById('r-risk-pct').textContent      = riskPct + '%';
+  const riskPct = params.maxloss / params.capital * 100;
+  document.getElementById('r-risk-pct').textContent      = riskPct.toFixed(1) + '%';
   document.getElementById('r-maxloss-show').textContent  = fmtU(params.maxloss);
   document.getElementById('r-drawdown').textContent      = (riskPct * 3).toFixed(1) + '%';
 }
@@ -709,7 +711,8 @@ function updateRangeTable(p1, params, currentP2) {
 
   const isShort = direction === 'short';
   const step = p1 >= 10000 ? 100 : p1 >= 1000 ? 20 : p1 >= 100 ? 5 : p1 >= 10 ? 1 : p1 >= 1 ? 0.1 : 0.01;
-  const rows = Array.from({length: 16}, (_, i) => isShort ? p1 + step * (i + 1) : p1 - step * (i + 1));
+  const rows = Array.from({length: 16}, (_, i) => isShort ? p1 + step * (i + 1) : p1 - step * (i + 1))
+    .filter(p2 => p2 > 0);
   meta.textContent = `首倉 ${fmt(p1)} | 步距 ${fmtPts(step)} 點`;
 
   const tbody = rows.map(p2 => {
@@ -765,17 +768,24 @@ async function fetchLivePrice() {
       document.getElementById('live-status').innerHTML =
         `OKX ${currentCoin}/USDT · ${now}` +
         (chg !== null ? ` · <span style="color:${chg >= 0 ? 'var(--green)' : 'var(--red)'}">${chg >= 0 ? '+' : ''}${chg.toFixed(2)}%</span>` : '');
+      updateFillBtns();
     } else {
       livePrice = null;
       document.getElementById('live-price').textContent = '—';
       document.getElementById('live-status').textContent =
         json.code !== '0' ? `OKX 無 ${currentCoin} 永續合約` : '無法取得即時價格';
+      updateFillBtns();
     }
   } catch {
     livePrice = null;
     document.getElementById('live-price').textContent = '—';
     document.getElementById('live-status').textContent = '網路錯誤，重試中…';
+    updateFillBtns();
   }
+}
+
+function updateFillBtns() {
+  document.querySelectorAll('.fill-btn').forEach(b => b.classList.toggle('no-price', !livePrice));
 }
 
 function useLivePrice(field) {
