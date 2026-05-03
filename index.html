@@ -415,11 +415,11 @@ body.is-desktop .sheet-overlay { display: none !important; }
       <div style="font-size:11px;color:var(--muted)">預設值對應老師的模型。可根據自己帳戶調整。</div>
     </div>
     <div class="settings-grid">
-      <div class="setting-item"><label>本金（U）</label><input type="number" id="capital" value="2000" oninput="syncSettings('capital',this.value)"></div>
-      <div class="setting-item"><label>單筆最大虧損（U）</label><input type="number" id="maxloss" value="300" oninput="syncSettings('maxloss',this.value)"></div>
-      <div class="setting-item"><label>補倉後出場點數</label><input type="number" id="exitpts" value="50" oninput="syncSettings('exitpts',this.value)"></div>
-      <div class="setting-item"><label>最低獲利要求（點）</label><input type="number" id="minprofit" value="20" oninput="syncSettings('minprofit',this.value)"></div>
-      <div class="setting-item"><label>最低生存空間（點）</label><input type="number" id="minsurvive" value="30" oninput="syncSettings('minsurvive',this.value)"></div>
+      <div class="setting-item"><label>本金（U）</label><input type="number" step="any" id="capital" value="2000" oninput="syncSettings('capital',this.value)"></div>
+      <div class="setting-item"><label>單筆最大虧損（U）</label><input type="number" step="any" id="maxloss" value="300" oninput="syncSettings('maxloss',this.value)"></div>
+      <div class="setting-item"><label>補倉後出場點數</label><input type="number" step="any" id="exitpts" value="50" oninput="syncSettings('exitpts',this.value)"></div>
+      <div class="setting-item"><label>最低獲利要求（點）</label><input type="number" step="any" id="minprofit" value="20" oninput="syncSettings('minprofit',this.value)"></div>
+      <div class="setting-item"><label>最低生存空間（點）</label><input type="number" step="any" id="minsurvive" value="30" oninput="syncSettings('minsurvive',this.value)"></div>
     </div>
   </div>
 
@@ -498,11 +498,11 @@ body.is-desktop .sheet-overlay { display: none !important; }
   <div class="sheet-title">⚙ 風控參數設定</div>
   <div class="sheet-subtitle">預設值對應老師的模型。可根據自己帳戶調整。</div>
   <div class="sheet-grid">
-    <div class="setting-item"><label>本金（U）</label><input type="number" inputmode="decimal" id="m-capital" value="2000" oninput="syncSettings('capital',this.value)"></div>
-    <div class="setting-item"><label>最大虧損（U）</label><input type="number" inputmode="decimal" id="m-maxloss" value="300" oninput="syncSettings('maxloss',this.value)"></div>
-    <div class="setting-item"><label>出場點數</label><input type="number" inputmode="decimal" id="m-exitpts" value="50" oninput="syncSettings('exitpts',this.value)"></div>
-    <div class="setting-item"><label>最低獲利（點）</label><input type="number" inputmode="decimal" id="m-minprofit" value="20" oninput="syncSettings('minprofit',this.value)"></div>
-    <div class="setting-item"><label>最低生存（點）</label><input type="number" inputmode="decimal" id="m-minsurvive" value="30" oninput="syncSettings('minsurvive',this.value)"></div>
+    <div class="setting-item"><label>本金（U）</label><input type="number" step="any" inputmode="decimal" id="m-capital" value="2000" oninput="syncSettings('capital',this.value)"></div>
+    <div class="setting-item"><label>最大虧損（U）</label><input type="number" step="any" inputmode="decimal" id="m-maxloss" value="300" oninput="syncSettings('maxloss',this.value)"></div>
+    <div class="setting-item"><label>出場點數</label><input type="number" step="any" inputmode="decimal" id="m-exitpts" value="50" oninput="syncSettings('exitpts',this.value)"></div>
+    <div class="setting-item"><label>最低獲利（點）</label><input type="number" step="any" inputmode="decimal" id="m-minprofit" value="20" oninput="syncSettings('minprofit',this.value)"></div>
+    <div class="setting-item"><label>最低生存（點）</label><input type="number" step="any" inputmode="decimal" id="m-minsurvive" value="30" oninput="syncSettings('minsurvive',this.value)"></div>
     <div class="setting-item" style="display:flex;align-items:flex-end">
       <button onclick="closeSettings()" style="width:100%;background:var(--yellow);color:#000;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;min-height:48px">完成</button>
     </div>
