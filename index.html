@@ -207,6 +207,14 @@ main { max-width: 1080px; margin: 0 auto; padding: 16px; }
 }
 .price-input::placeholder { color: var(--border2); }
 .price-hint { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.q1-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 4px 0; }
+.q1-sub-label { font-size: 10px; color: var(--muted); margin-bottom: 3px; }
+.sub-input {
+  width: 100%; background: transparent; border: none; outline: none;
+  color: var(--text); font-size: 22px; font-weight: 800;
+  font-variant-numeric: tabular-nums; padding: 2px 0;
+}
+.sub-input::placeholder { color: var(--border2); }
 
 /* ─── VERDICT ─── */
 .verdict {
@@ -538,9 +546,18 @@ body.is-mobile .sig-score-num { font-size: 16px; }
       <div class="price-hint" id="hint-p2">計畫逆勢加碼的價格</div>
     </div>
     <div class="price-card">
-      <div class="price-card-label"><span class="step-dot step-dot-3">首</span>首倉大小</div>
-      <input class="price-input" type="number" step="any" inputmode="decimal" id="q1-input" placeholder="自動" oninput="calc()">
-      <div class="price-hint" id="hint-q1">留空：系統自動建議</div>
+      <div class="price-card-label"><span class="step-dot step-dot-3">首</span>倉位 / 風控</div>
+      <div class="q1-row">
+        <div>
+          <div class="q1-sub-label">首倉大小（顆）</div>
+          <input type="number" step="any" inputmode="decimal" id="q1-input" class="sub-input" placeholder="自動" oninput="calc()">
+        </div>
+        <div>
+          <div class="q1-sub-label">總風控（U）</div>
+          <input type="number" step="any" inputmode="decimal" id="main-maxloss" class="sub-input" value="300" oninput="syncSettings('maxloss',this.value)">
+        </div>
+      </div>
+      <div class="price-hint" id="hint-q1">留空：系統自動建議首倉</div>
     </div>
   </div>
 
@@ -736,6 +753,8 @@ function selectCoin(c) {
 function syncSettings(field, val) {
   document.getElementById(field).value = val;
   document.getElementById('m-' + field).value = val;
+  const mainEl = document.getElementById('main-' + field);
+  if (mainEl) mainEl.value = val;
   calc();
 }
 
