@@ -175,7 +175,7 @@ main { max-width: 1080px; margin: 0 auto; padding: 16px; }
 /* ─── PRICE INPUTS ─── */
 .input-section {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 12px;
   margin-bottom: 14px;
 }
@@ -199,6 +199,7 @@ main { max-width: 1080px; margin: 0 auto; padding: 16px; }
 }
 .step-dot-1 { background: rgba(246,70,93,0.2); color: var(--red); }
 .step-dot-2 { background: rgba(79,142,247,0.2); color: var(--blue); }
+.step-dot-3 { background: rgba(14,203,129,0.2); color: var(--green); }
 .price-input {
   width: 100%; background: transparent; border: none; outline: none;
   color: var(--text); font-size: 28px; font-weight: 800;
@@ -352,7 +353,8 @@ body.is-mobile .coin-search-desktop { display: none; }
 body.is-mobile .mobile-coin-row { display: flex; }
 body.is-mobile .verdict-quote { display: none; }
 body.is-mobile .results-row { grid-template-columns: 1fr; }
-body.is-mobile .input-section { grid-template-columns: 1fr; }
+body.is-mobile .input-section { grid-template-columns: 1fr 1fr; }
+body.is-mobile .input-section .price-card:last-child { grid-column: 1 / -1; }
 body.is-mobile .settings-grid { display: none; } /* use bottom sheet instead */
 body.is-mobile main { padding: 12px; }
 body.is-mobile .live-bar { flex-wrap: wrap; gap: 10px; }
@@ -370,6 +372,58 @@ body.is-mobile .verdict { padding: 16px; }
 /* ═══ DESKTOP OVERRIDES ═══ */
 body.is-desktop .bottom-sheet { display: none !important; }
 body.is-desktop .sheet-overlay { display: none !important; }
+
+/* ─── SIGNAL BAR ─── */
+.signal-bar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 8px 16px;
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+}
+.sig-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 12px;
+  min-width: 0;
+}
+.sig-item:first-child { padding-left: 0; }
+.sig-divider { width: 1px; background: var(--border); margin: 2px 0; flex-shrink: 0; }
+.sig-label { font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.sig-val { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.sig-hint { font-size: 10px; color: var(--muted2); }
+.sig-hint.ok   { color: var(--green); }
+.sig-hint.warn { color: var(--yellow); }
+.sig-hint.no   { color: var(--red); }
+.sig-bar-wrap { height: 4px; background: var(--border2); border-radius: 2px; margin: 3px 0 1px; }
+.sig-bar-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+.sig-ls-wrap { height: 4px; display: flex; border-radius: 2px; overflow: hidden; margin: 3px 0 1px; }
+.sig-ls-long  { background: var(--green); transition: width 0.3s; }
+.sig-ls-short { background: var(--red);   flex: 1; }
+.sig-score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 16px 4px 20px;
+  border-left: 1px solid var(--border);
+  gap: 1px;
+  flex-shrink: 0;
+}
+.sig-score-num   { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; }
+.sig-score-label { font-size: 10px; color: var(--muted); white-space: nowrap; }
+.sig-score.s3 .sig-score-num { color: var(--green); }
+.sig-score.s2 .sig-score-num { color: var(--yellow); }
+.sig-score.s1 .sig-score-num, .sig-score.s0 .sig-score-num { color: var(--red); }
+body.is-mobile .signal-bar { flex-wrap: wrap; gap: 6px; padding: 8px 12px; }
+body.is-mobile .sig-item { flex: calc(50% - 4px); padding: 4px 8px; min-width: calc(50% - 4px); }
+body.is-mobile .sig-item:first-child { padding-left: 8px; }
+body.is-mobile .sig-divider { display: none; }
+body.is-mobile .sig-score { border-left: none; border-top: 1px solid var(--border); width: 100%; flex-direction: row; justify-content: center; gap: 6px; padding: 6px 0 2px; }
+body.is-mobile .sig-score-num { font-size: 16px; }
 </style>
 </head>
 <body>
@@ -426,6 +480,34 @@ body.is-desktop .sheet-overlay { display: none !important; }
   </div>
 </div>
 
+<!-- ── Market Signal Bar ── -->
+<div class="signal-bar" id="signal-bar">
+  <div class="sig-item">
+    <div class="sig-label">資金費率</div>
+    <div class="sig-val" id="sig-funding-val">—</div>
+    <div class="sig-bar-wrap"><div class="sig-bar-fill" id="sig-funding-bar" style="width:0%;background:var(--muted)"></div></div>
+    <div class="sig-hint" id="sig-funding-hint">載入中…</div>
+  </div>
+  <div class="sig-divider"></div>
+  <div class="sig-item">
+    <div class="sig-label">24h 位置</div>
+    <div class="sig-val" id="sig-range-val">—</div>
+    <div class="sig-bar-wrap"><div class="sig-bar-fill" id="sig-range-bar" style="width:0%;background:var(--muted)"></div></div>
+    <div class="sig-hint" id="sig-range-hint">載入中…</div>
+  </div>
+  <div class="sig-divider"></div>
+  <div class="sig-item">
+    <div class="sig-label">多空比（帳戶數）</div>
+    <div class="sig-val" id="sig-ls-val">—</div>
+    <div class="sig-ls-wrap"><div class="sig-ls-long" id="sig-ls-long" style="width:50%"></div><div class="sig-ls-short"></div></div>
+    <div class="sig-hint" id="sig-ls-hint">載入中…</div>
+  </div>
+  <div class="sig-score s0" id="sig-score">
+    <div class="sig-score-num" id="sig-score-num">—</div>
+    <div class="sig-score-label">/ 3 信號</div>
+  </div>
+</div>
+
 <main>
 
   <!-- Desktop settings panel -->
@@ -454,6 +536,11 @@ body.is-desktop .sheet-overlay { display: none !important; }
       <div class="price-card-label"><span class="step-dot step-dot-2">2</span>預計補倉價格</div>
       <input class="price-input" type="number" step="any" inputmode="decimal" id="p2" placeholder="0" oninput="calc()">
       <div class="price-hint" id="hint-p2">計畫逆勢加碼的價格</div>
+    </div>
+    <div class="price-card">
+      <div class="price-card-label"><span class="step-dot step-dot-3">首</span>首倉大小</div>
+      <input class="price-input" type="number" step="any" inputmode="decimal" id="q1-input" placeholder="自動" oninput="calc()">
+      <div class="price-hint" id="hint-q1">留空：系統自動建議</div>
     </div>
   </div>
 
@@ -540,6 +627,10 @@ let livePrice = null;
 let liveInterval = null;
 let allSwapCoins = [];
 let pendingAutoParams = false;
+let liveHigh24h = null, liveLow24h = null;
+let liveFundingRate = null, liveFundingTime = null;
+let liveLSRatio = null;
+let fundingInterval = null, lsInterval = null;
 
 // ─── Load all OKX USDT perpetual contracts ───
 const PRESET_COIN_LIST = ['ETH', 'BTC', 'SOL', 'XRP', 'BNB'];
@@ -670,6 +761,7 @@ function setDir(d) {
   document.getElementById('hint-p2').textContent = d === 'short'
     ? '計畫逆勢加碼的價格（應高於首倉）'
     : '計畫逆勢加碼的價格（應低於首倉）';
+  updateMarketSignals();
   calc();
 }
 
@@ -689,7 +781,11 @@ function setCoin(c) {
   } else {
     pendingAutoParams = true;
   }
+  liveHigh24h = liveLow24h = liveFundingRate = liveFundingTime = liveLSRatio = null;
+  updateMarketSignals();
   fetchLivePrice();
+  fetchFundingRate();
+  fetchLSRatio();
   calc();
 }
 
@@ -719,7 +815,7 @@ function getParams() {
   };
 }
 
-function computeRow(p1, p2, params) {
+function computeRow(p1, p2, params, q1_user) {
   const { maxloss, exitpts, minprofit, minsurvive, capital } = params;
   const isShort = direction === 'short';
   const dist = isShort ? (p2 - p1) : (p1 - p2);
@@ -728,9 +824,14 @@ function computeRow(p1, p2, params) {
 
   const totalDeathDist = minsurvive * 2;
   const totalPos = maxloss / totalDeathDist;
-  const R = dist > minsurvive ? (dist - minsurvive) / minsurvive : 0.5;
-  const q1 = totalPos / (1 + R);
+
+  if (q1_user > 0 && q1_user >= totalPos) {
+    return { error: `首倉 ${fmt(q1_user, 4)} 顆超過風控上限 ${fmt(totalPos, 4)} 顆，請降低首倉或提高最大虧損預算` };
+  }
+
+  const q1 = (q1_user > 0) ? q1_user : totalPos / 3;
   const q2 = totalPos - q1;
+  const R  = q2 / q1;
   const avgCost = (q1 * p1 + q2 * p2) / totalPos;
   const exitPrice    = isShort ? p2 - exitpts : p2 + exitpts;
   const deathLine    = isShort ? avgCost + totalDeathDist : avgCost - totalDeathDist;
@@ -748,11 +849,28 @@ function calc() {
   const p1 = parseFloat(document.getElementById('p1').value);
   const p2 = parseFloat(document.getElementById('p2').value);
   const params = getParams();
+  const q1_user = parseFloat(document.getElementById('q1-input').value) || 0;
 
-  updateRangeTable(p1, params, p2);
+  // Update q1 hint
+  const totalPos = params.maxloss / (params.minsurvive * 2);
+  const hintEl = document.getElementById('hint-q1');
+  if (!q1_user) {
+    hintEl.textContent = `建議：${fmt(totalPos / 3, 4)} 顆（1:2 比例）`;
+    hintEl.style.color = '';
+  } else if (q1_user >= totalPos) {
+    hintEl.textContent = `⚠ 超過上限 ${fmt(totalPos, 4)} 顆`;
+    hintEl.style.color = 'var(--red)';
+  } else {
+    const q2 = totalPos - q1_user;
+    const rDisplay = (q2 / q1_user).toFixed(2);
+    hintEl.textContent = `補倉：${fmt(q2, 4)} 顆 · 首:補 = 1:${rDisplay}`;
+    hintEl.style.color = q2 >= q1_user ? 'var(--green)' : 'var(--yellow)';
+  }
+
+  updateRangeTable(p1, params, p2, q1_user);
   if (!p1 || !p2) { resetResults(params); return; }
 
-  const res = computeRow(p1, p2, params);
+  const res = computeRow(p1, p2, params, q1_user);
 
   if (res.error) {
     setVerdict('danger', '⚠️', '方向錯誤', res.error, '');
@@ -832,7 +950,7 @@ function resetResults(params) {
 }
 
 // ─── Range Table ───
-function updateRangeTable(p1, params, currentP2) {
+function updateRangeTable(p1, params, currentP2, q1_user) {
   const wrap = document.getElementById('range-table-wrap');
   const meta = document.getElementById('range-meta');
 
@@ -854,7 +972,7 @@ function updateRangeTable(p1, params, currentP2) {
   }
 
   const tbody = rows.map(p2 => {
-    const res = computeRow(p1, p2, params);
+    const res = computeRow(p1, p2, params, q1_user);
     if (res.error) return `<tr class="row-bad"><td><strong>${fmtPrice(p2)}</strong></td><td colspan="6" style="color:var(--muted)">${res.error}</td></tr>`;
 
     const isCurrent = currentP2 && Math.abs(p2 - currentP2) < step * 0.6;
@@ -900,6 +1018,8 @@ async function fetchLivePrice() {
     if (coin !== currentCoin) return;
     if (json.code === '0' && json.data?.length) {
       livePrice = parseFloat(json.data[0].last);
+      liveHigh24h = parseFloat(json.data[0].high24h);
+      liveLow24h  = parseFloat(json.data[0].low24h);
       const open = parseFloat(json.data[0].open24h);
       const chg  = open ? (livePrice - open) / open * 100 : null;
       document.getElementById('live-price').textContent =
@@ -909,6 +1029,7 @@ async function fetchLivePrice() {
         `OKX ${currentCoin}/USDT · ${now}` +
         (chg !== null ? ` · <span style="color:${chg >= 0 ? 'var(--green)' : 'var(--red)'}">${chg >= 0 ? '+' : ''}${chg.toFixed(2)}%</span>` : '');
       updateFillBtns();
+      updateMarketSignals();
       if (pendingAutoParams && coin === currentCoin) {
         pendingAutoParams = false;
         const ap = autoParams(livePrice);
@@ -948,16 +1069,174 @@ function startLiveFeed() {
   fetchLivePrice();
   if (liveInterval) clearInterval(liveInterval);
   liveInterval = setInterval(fetchLivePrice, 1000);
+  fetchFundingRate();
+  if (fundingInterval) clearInterval(fundingInterval);
+  fundingInterval = setInterval(fetchFundingRate, 60000);
+  fetchLSRatio();
+  if (lsInterval) clearInterval(lsInterval);
+  lsInterval = setInterval(fetchLSRatio, 30000);
 }
 
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
-    clearInterval(liveInterval);
-    liveInterval = null;
+    clearInterval(liveInterval); liveInterval = null;
+    clearInterval(fundingInterval); fundingInterval = null;
+    clearInterval(lsInterval); lsInterval = null;
   } else {
     startLiveFeed();
   }
 });
+
+async function fetchFundingRate() {
+  const coin = currentCoin;
+  try {
+    const res  = await fetch(`https://www.okx.com/api/v5/public/funding-rate?instId=${coin}-USDT-SWAP`);
+    const json = await res.json();
+    if (coin !== currentCoin) return;
+    if (json.code === '0' && json.data?.length) {
+      liveFundingRate = parseFloat(json.data[0].fundingRate);
+      liveFundingTime = parseInt(json.data[0].nextFundingTime);
+    } else {
+      liveFundingRate = null;
+    }
+  } catch {
+    if (coin !== currentCoin) return;
+    liveFundingRate = null;
+  }
+  updateMarketSignals();
+}
+
+async function fetchLSRatio() {
+  const coin = currentCoin;
+  try {
+    const res  = await fetch(`https://www.okx.com/api/v5/rubik/stat/contracts/long-short-account-ratio?instId=${coin}-USDT&period=5m`);
+    const json = await res.json();
+    if (coin !== currentCoin) return;
+    if (json.code === '0' && json.data?.length) {
+      liveLSRatio = parseFloat(json.data[0].longShortRatio);
+    } else {
+      liveLSRatio = null;
+    }
+  } catch {
+    if (coin !== currentCoin) return;
+    liveLSRatio = null;
+  }
+  updateMarketSignals();
+}
+
+function updateMarketSignals() {
+  const isShort = direction === 'short';
+  let score = 0;
+
+  // ── Signal 1: Funding Rate ──
+  const fEl = document.getElementById('sig-funding-val');
+  const fBar = document.getElementById('sig-funding-bar');
+  const fHint = document.getElementById('sig-funding-hint');
+  if (liveFundingRate !== null) {
+    const pct = (liveFundingRate * 100).toFixed(4);
+    fEl.textContent = (liveFundingRate >= 0 ? '+' : '') + pct + '%';
+    const barPct = Math.min(100, Math.abs(liveFundingRate) / 0.002 * 100);
+    fBar.style.width = barPct + '%';
+    const aligned = isShort ? liveFundingRate > 0 : liveFundingRate < 0;
+    if (aligned) {
+      score++;
+      fEl.style.color = 'var(--green)';
+      fBar.style.background = 'var(--green)';
+      fHint.className = 'sig-hint ok';
+      fHint.textContent = isShort ? '多頭付費 → 市場偏多 ✓' : '空頭付費 → 市場偏空 ✓';
+    } else {
+      fEl.style.color = Math.abs(liveFundingRate) > 0.0001 ? 'var(--red)' : 'var(--muted2)';
+      fBar.style.background = Math.abs(liveFundingRate) > 0.0001 ? 'var(--red)' : 'var(--muted)';
+      fHint.className = 'sig-hint' + (Math.abs(liveFundingRate) > 0.0001 ? ' no' : '');
+      fHint.textContent = isShort ? '空頭付費 → 市場偏空 ✗' : '多頭付費 → 市場偏多 ✗';
+    }
+    // Countdown to next funding
+    if (liveFundingTime) {
+      const mins = Math.round((liveFundingTime - Date.now()) / 60000);
+      if (mins > 0) fHint.textContent += ` (${mins}m)`;
+    }
+  } else {
+    fEl.textContent = '—'; fEl.style.color = 'var(--muted)';
+    fBar.style.width = '0%';
+    fHint.className = 'sig-hint'; fHint.textContent = '載入中…';
+  }
+
+  // ── Signal 2: 24h Range ──
+  const rEl = document.getElementById('sig-range-val');
+  const rBar = document.getElementById('sig-range-bar');
+  const rHint = document.getElementById('sig-range-hint');
+  if (livePrice !== null && liveHigh24h && liveLow24h && liveHigh24h > liveLow24h) {
+    const rangePct = (livePrice - liveLow24h) / (liveHigh24h - liveLow24h) * 100;
+    rEl.textContent = rangePct.toFixed(0) + '%';
+    rBar.style.width = rangePct.toFixed(1) + '%';
+    const highZone = rangePct >= 75;
+    const lowZone  = rangePct <= 25;
+    const aligned  = isShort ? highZone : lowZone;
+    if (aligned) {
+      score++;
+      rEl.style.color = 'var(--green)';
+      rBar.style.background = 'var(--green)';
+      rHint.className = 'sig-hint ok';
+      rHint.textContent = isShort ? `近 24h 高點 ✓` : `近 24h 低點 ✓`;
+    } else {
+      const nearOpp = isShort ? lowZone : highZone;
+      rEl.style.color = nearOpp ? 'var(--red)' : 'var(--muted2)';
+      rBar.style.background = nearOpp ? 'var(--red)' : 'var(--blue)';
+      rHint.className = 'sig-hint' + (nearOpp ? ' no' : '');
+      rHint.textContent = isShort ? `近 24h 低點 ✗` : `近 24h 高點 ✗`;
+      if (!nearOpp) { rHint.className = 'sig-hint warn'; rHint.textContent = '中段位置 ⚠'; }
+    }
+    rHint.textContent += `  H:${fmtPrice(liveHigh24h)} L:${fmtPrice(liveLow24h)}`;
+  } else {
+    rEl.textContent = '—'; rEl.style.color = 'var(--muted)';
+    rBar.style.width = '0%';
+    rHint.className = 'sig-hint'; rHint.textContent = '載入中…';
+  }
+
+  // ── Signal 3: Long/Short Ratio ──
+  const lsEl = document.getElementById('sig-ls-val');
+  const lsLong = document.getElementById('sig-ls-long');
+  const lsHint = document.getElementById('sig-ls-hint');
+  if (liveLSRatio !== null) {
+    const longPct = (liveLSRatio / (liveLSRatio + 1) * 100);
+    const shortPct = 100 - longPct;
+    lsEl.textContent = `多 ${longPct.toFixed(0)}% : 空 ${shortPct.toFixed(0)}%`;
+    lsLong.style.width = longPct.toFixed(1) + '%';
+    const manyLong  = longPct > 60;
+    const manyShort = shortPct > 60;
+    const aligned   = isShort ? manyLong : manyShort;
+    if (aligned) {
+      score++;
+      lsEl.style.color = 'var(--green)';
+      lsHint.className = 'sig-hint ok';
+      lsHint.textContent = isShort ? `多數人做多 → 逆勢做空 ✓` : `多數人做空 → 逆勢做多 ✓`;
+    } else if (manyLong || manyShort) {
+      lsEl.style.color = 'var(--red)';
+      lsHint.className = 'sig-hint no';
+      lsHint.textContent = isShort ? `多數人做空 → 方向同向 ✗` : `多數人做多 → 方向同向 ✗`;
+    } else {
+      lsEl.style.color = 'var(--muted2)';
+      lsHint.className = 'sig-hint warn';
+      lsHint.textContent = '多空接近均衡 ⚠';
+    }
+  } else {
+    lsEl.textContent = '—'; lsEl.style.color = 'var(--muted)';
+    lsLong.style.width = '50%';
+    lsHint.className = 'sig-hint'; lsHint.textContent = '載入中…';
+  }
+
+  // ── Score ──
+  const scoreEl = document.getElementById('sig-score');
+  const scoreNum = document.getElementById('sig-score-num');
+  const allLoaded = liveFundingRate !== null && livePrice !== null && liveLSRatio !== null;
+  if (allLoaded) {
+    scoreNum.textContent = score;
+    scoreEl.className = 'sig-score s' + score;
+  } else {
+    scoreNum.textContent = '—';
+    scoreEl.className = 'sig-score s0';
+  }
+}
 
 // ─── Swipe down to close bottom sheet ───
 (function() {
