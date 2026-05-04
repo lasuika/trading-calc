@@ -1109,11 +1109,11 @@ async function fetchFundingRate() {
 async function fetchLSRatio() {
   const coin = currentCoin;
   try {
-    const res  = await fetch(`https://www.okx.com/api/v5/rubik/stat/contracts/long-short-account-ratio?instId=${coin}-USDT&period=5m`);
+    const res  = await fetch(`https://www.okx.com/api/v5/rubik/stat/contracts/long-short-account-ratio?ccy=${coin}&period=5m`);
     const json = await res.json();
     if (coin !== currentCoin) return;
     if (json.code === '0' && json.data?.length) {
-      liveLSRatio = parseFloat(json.data[0].longShortRatio);
+      liveLSRatio = parseFloat(json.data[0][1]);
     } else {
       liveLSRatio = null;
     }
